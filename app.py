@@ -7,15 +7,11 @@ app = Flask(__name__)
 init_db()
 
 
-# ======================
-# USERS
-# ======================
 @app.route("/users", methods=["GET", "POST"])
 def users():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # GET: listar usuarios
     if request.method == "GET":
         cursor.execute("SELECT * FROM users")
         users = [
@@ -25,7 +21,6 @@ def users():
         conn.close()
         return jsonify(users)
 
-    # POST: crear usuario
     if request.method == "POST":
         data = request.json
 
@@ -44,15 +39,11 @@ def users():
         }), 201
 
 
-# ======================
-# PRODUCTS
-# ======================
 @app.route("/products", methods=["GET", "POST"])
 def products():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # GET
     if request.method == "GET":
         cursor.execute("SELECT * FROM products")
         products = [
@@ -67,7 +58,6 @@ def products():
         conn.close()
         return jsonify(products)
 
-    # POST
     if request.method == "POST":
         data = request.json
 
@@ -86,9 +76,6 @@ def products():
         }), 201
 
 
-# ======================
-# CREATE ORDER
-# ======================
 @app.route("/orders", methods=["POST"])
 def create_order():
     conn = get_connection()
@@ -100,7 +87,6 @@ def create_order():
 
     total = 0
 
-    # calcular total
     for item in items:
         cursor.execute(
             "SELECT price, stock FROM products WHERE id=?",
@@ -120,14 +106,12 @@ def create_order():
 
         total += price * item["quantity"]
 
-    # crear orden
     cursor.execute(
         "INSERT INTO orders (user_id, total) VALUES (?, ?)",
         (user_id, total)
     )
     order_id = cursor.lastrowid
 
-    # insertar items + actualizar stock
     for item in items:
         cursor.execute(
             "INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)",
@@ -149,9 +133,6 @@ def create_order():
     }), 201
 
 
-# ======================
-# GET ORDERS
-# ======================
 @app.route("/orders", methods=["GET"])
 def get_orders():
     conn = get_connection()
@@ -167,9 +148,6 @@ def get_orders():
     return jsonify(orders)
 
 
-# ======================
-# ORDER DETAIL
-# ======================
 @app.route("/orders/<int:id>", methods=["GET"])
 def order_detail(id):
     conn = get_connection()
@@ -207,9 +185,5 @@ def order_detail(id):
         "items": items
     })
 
-
-# ======================
-# RUN SERVER
-# ======================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
